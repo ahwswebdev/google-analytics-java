@@ -187,8 +187,7 @@ public class GoogleAnalytics {
     }
 
     private RequestConfig configureRequest() {
-        if (config != null) {
-
+        if (config != null && config.getProxyHost() != null) {
             HttpHost proxy = new HttpHost(config.getProxyHost(), config.getProxyPort(), "http");
             return RequestConfig.custom()
                     .setProxy(proxy)
