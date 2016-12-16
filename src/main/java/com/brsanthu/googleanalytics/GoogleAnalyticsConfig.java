@@ -33,7 +33,8 @@ public class GoogleAnalyticsConfig {
 	private boolean useHttps = true;
 	private boolean validate = true;
 	private String httpUrl = "http://www.google-analytics.com/collect";
-	private String httpsUrl = "https://ssl.google-analytics.com/collect";
+    private String httpsUrl = "https://www.google-analytics.com/collect";
+    private String batchUrl = "https://www.google-analytics.com/batch";
 	private String userAgent = null;
 	private String proxyHost = null;
 	private int proxyPort = 80;
@@ -55,7 +56,7 @@ public class GoogleAnalyticsConfig {
 	 * 
 	 * @param requestParameterDiscoverer can be null and is so, parameters will not be discovered.
 	 */
-	public void setRequestParameterDiscoverer(RequestParameterDiscoverer requestParameterDiscoverer) {
+	public void setRequestParameterDiscoverer(final RequestParameterDiscoverer requestParameterDiscoverer) {
 		this.requestParameterDiscoverer = requestParameterDiscoverer;
 	}
 	
@@ -69,7 +70,7 @@ public class GoogleAnalyticsConfig {
 	 *
 	 * @param gatherStats
 	 */
-	public void setGatherStats(boolean gatherStats) {
+	public void setGatherStats(final boolean gatherStats) {
 		this.gatherStats = gatherStats;
 	}
 
@@ -82,7 +83,7 @@ public class GoogleAnalyticsConfig {
 	 *
 	 * @param threadNameFormat non-null string for thread name.
 	 */
-	public GoogleAnalyticsConfig setThreadNameFormat(String threadNameFormat) {
+	public GoogleAnalyticsConfig setThreadNameFormat(final String threadNameFormat) {
 		this.threadNameFormat = threadNameFormat;
 		return this;
 	}
@@ -97,7 +98,7 @@ public class GoogleAnalyticsConfig {
 	 * @deprecated Use {@link #setDiscoverRequestParameters(boolean)} instead
 	 */
 	@Deprecated
-	public GoogleAnalyticsConfig setDeriveSystemParameters(boolean deriveSystemProperties) {
+	public GoogleAnalyticsConfig setDeriveSystemParameters(final boolean deriveSystemProperties) {
 		return setDiscoverRequestParameters(deriveSystemProperties);
 	}
 
@@ -107,7 +108,7 @@ public class GoogleAnalyticsConfig {
 	 *
 	 * <p>This is <strong>initialization</strong> level configuration (must be set while creating GoogleAnalytics object).</p>
 	 */
-	public GoogleAnalyticsConfig setDiscoverRequestParameters(boolean discoverSystemParameters) {
+	public GoogleAnalyticsConfig setDiscoverRequestParameters(final boolean discoverSystemParameters) {
 		this.discoverRequestParameters = discoverSystemParameters;
 		return this;
 	}
@@ -130,7 +131,7 @@ public class GoogleAnalyticsConfig {
 	 *
 	 * <p>This is <strong>initialization</strong> level configuration (must be set while creating GoogleAnalytics object).</p>
 	 */
-	public GoogleAnalyticsConfig setProxyUserName(String proxyUserName) {
+	public GoogleAnalyticsConfig setProxyUserName(final String proxyUserName) {
 		this.proxyUserName = proxyUserName;
 		return this;
 	}
@@ -148,7 +149,7 @@ public class GoogleAnalyticsConfig {
 	 *
 	 * <p>This is <strong>initialization</strong> level configuration (must be set while creating GoogleAnalytics object).</p>
 	 */
-	public GoogleAnalyticsConfig setProxyPassword(String proxyPassword) {
+	public GoogleAnalyticsConfig setProxyPassword(final String proxyPassword) {
 		this.proxyPassword = proxyPassword;
 		return this;
 	}
@@ -161,7 +162,7 @@ public class GoogleAnalyticsConfig {
 	 *
 	 * <p>This is <strong>initialization</strong> level configuration (must be set while creating GoogleAnalytics object).</p>
 	 */
-	public GoogleAnalyticsConfig setProxyHost(String proxyHost) {
+	public GoogleAnalyticsConfig setProxyHost(final String proxyHost) {
 		this.proxyHost = proxyHost;
 		return this;
 	}
@@ -174,7 +175,7 @@ public class GoogleAnalyticsConfig {
 	 *
 	 * <p>This is <strong>initialization</strong> level configuration (must be set while creating GoogleAnalytics object).</p>
 	 */
-	public GoogleAnalyticsConfig setProxyPort(int proxyPort) {
+	public GoogleAnalyticsConfig setProxyPort(final int proxyPort) {
 		this.proxyPort = proxyPort;
 		return this;
 	}
@@ -188,7 +189,7 @@ public class GoogleAnalyticsConfig {
 	 *
 	 * <p>This is <strong>initialization</strong> level configuration (must be set while creating GoogleAnalytics object).</p>
 	 */
-	public GoogleAnalyticsConfig setUserAgent(String userAgent) {
+	public GoogleAnalyticsConfig setUserAgent(final String userAgent) {
 		this.userAgent = userAgent;
 		return this;
 	}
@@ -202,7 +203,7 @@ public class GoogleAnalyticsConfig {
 	 *
 	 * <p>This is <strong>request</strong> level configuration (can be changed any time).</p>
 	 */
-	public GoogleAnalyticsConfig setEnabled(boolean enabled) {
+	public GoogleAnalyticsConfig setEnabled(final boolean enabled) {
 		this.enabled = enabled;
 		return this;
 	}
@@ -215,7 +216,7 @@ public class GoogleAnalyticsConfig {
 	public int getMaxThreads() {
 		return maxThreads;
 	}
-	public GoogleAnalyticsConfig setMaxThreads(int maxThreads) {
+	public GoogleAnalyticsConfig setMaxThreads(final int maxThreads) {
 		this.maxThreads = maxThreads;
 		return this;
 	}
@@ -228,7 +229,7 @@ public class GoogleAnalyticsConfig {
 	 *
 	 * <p>This is <strong>request</strong> level configuration (can be changed any time).</p>
 	 */
-	public GoogleAnalyticsConfig setUseHttps(boolean useHttps) {
+	public GoogleAnalyticsConfig setUseHttps(final boolean useHttps) {
 		this.useHttps = useHttps;
 		return this;
 	}
@@ -243,7 +244,7 @@ public class GoogleAnalyticsConfig {
 	 *
 	 * <p>This is <strong>request</strong> level configuration (can be changed any time).</p>
 	 */
-	public GoogleAnalyticsConfig setValidate(boolean validate) {
+	public GoogleAnalyticsConfig setValidate(final boolean validate) {
 		this.validate = validate;
 		return this;
 	}
@@ -258,7 +259,7 @@ public class GoogleAnalyticsConfig {
 	 * 
 	 * <p>This is <strong>request</strong> level configuration (can be changed any time).</p>
 	 */
-	public GoogleAnalyticsConfig setHttpUrl(String httpUrl) {
+	public GoogleAnalyticsConfig setHttpUrl(final String httpUrl) {
 		this.httpUrl = httpUrl;
 		return this;
 	}
@@ -272,7 +273,7 @@ public class GoogleAnalyticsConfig {
 	 *
 	 * <p>This is <strong>request</strong> level configuration (can be changed any time).</p>
 	 */
-	public GoogleAnalyticsConfig setHttpsUrl(String httpsUrl) {
+	public GoogleAnalyticsConfig setHttpsUrl(final String httpsUrl) {
 		this.httpsUrl = httpsUrl;
 		return this;
 	}
@@ -280,6 +281,21 @@ public class GoogleAnalyticsConfig {
 	String getUrl() {
 		return useHttps?httpsUrl:httpUrl;
 	}
+
+	public String getBatchUrl() {
+        return batchUrl;
+    }
+
+	/**
+     * URL to use when posting the event in batch mode. This url is Google Analytics service url and usually not updated by the clients.
+     * <p>Default value is <code>https://www.google-analytics.com/batch</code>
+     *
+     * <p>This is <strong>request</strong> level configuration (can be changed any time).</p>
+     */
+    public GoogleAnalyticsConfig setBatchUrl(final String batchUrl) {
+        this.batchUrl = batchUrl;
+        return this;
+    }
 
 	@Override
 	public String toString() {
@@ -340,7 +356,7 @@ public class GoogleAnalyticsConfig {
 		return builder.toString();
 	}
 
-    public static String mask(String value) {
+    public static String mask(final String value) {
     	return value == null?null:"********";
     }
 }

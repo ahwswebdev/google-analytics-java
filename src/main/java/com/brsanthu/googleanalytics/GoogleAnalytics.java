@@ -33,10 +33,12 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
 import org.apache.http.NameValuePair;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.UsernamePasswordCredentials;
+import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
@@ -49,8 +51,11 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
+import org.junit.runner.Request;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.brsanthu.googleanalytics.internal.MultiUrlEncodedFormEntity;
 
 /**
  * This is the main class of this library that accepts the requests from clients and
@@ -77,23 +82,23 @@ public class GoogleAnalytics {
     private ThreadPoolExecutor executor = null;
     private GoogleAnalyticsStats stats = new GoogleAnalyticsStats();
 
-    public GoogleAnalytics(String trackingId) {
+    public GoogleAnalytics(final String trackingId) {
         this(new GoogleAnalyticsConfig(), new DefaultRequest().trackingId(trackingId));
     }
 
-    public GoogleAnalytics(GoogleAnalyticsConfig config, String trackingId) {
+    public GoogleAnalytics(final GoogleAnalyticsConfig config, final String trackingId) {
         this(config, new DefaultRequest().trackingId(trackingId));
     }
 
-    public GoogleAnalytics(String trackingId, String appName, String appVersion) {
+    public GoogleAnalytics(final String trackingId, final String appName, final String appVersion) {
         this(new GoogleAnalyticsConfig(), trackingId, appName, appVersion);
     }
 
-    public GoogleAnalytics(GoogleAnalyticsConfig config, String trackingId, String appName, String appVersion) {
+    public GoogleAnalytics(final GoogleAnalyticsConfig config, final String trackingId, final String appName, final String appVersion) {
         this(config, new DefaultRequest().trackingId(trackingId).applicationName(appName).applicationVersion(appVersion));
     }
 
-    public GoogleAnalytics(GoogleAnalyticsConfig config, DefaultRequest defaultRequest) {
+    public GoogleAnalytics(final GoogleAnalyticsConfig config, final DefaultRequest defaultRequest) {
         if (config.isDiscoverRequestParameters() && config.getRequestParameterDiscoverer() != null) {
             config.getRequestParameterDiscoverer().discoverParameters(config, defaultRequest);
         }
@@ -113,7 +118,7 @@ public class GoogleAnalytics {
         return httpClient;
     }
 
-    public void setHttpClient(CloseableHttpClient httpClient) {
+    public void setHttpClient(final CloseableHttpClient httpClient) {
         this.httpClient = httpClient;
     }
 
@@ -121,12 +126,12 @@ public class GoogleAnalytics {
         return defaultRequest;
     }
 
-    public void setDefaultRequest(DefaultRequest request) {
+    public void setDefaultRequest(final DefaultRequest request) {
         this.defaultRequest = request;
     }
 
     @SuppressWarnings( { "rawtypes", "unchecked" })
-    public GoogleAnalyticsResponse post(GoogleAnalyticsRequest request) {
+    public GoogleAnalyticsResponse post(final GoogleAnalyticsRequest request) {
         GoogleAnalyticsResponse response = new GoogleAnalyticsResponse();
         if (!config.isEnabled()) {
             return response;
@@ -134,32 +139,10 @@ public class GoogleAnalytics {
 
         CloseableHttpResponse httpResponse = null;
         try {
-            List<NameValuePair> postParms = new ArrayList<NameValuePair>();
+            List<NameValuePair> postParms = getPostParamsForRequest(request);
 
-            logger.debug("Processing " + request);
+            httpResponse = executePostRequest(config.getUrl(), new UrlEncodedFormEntity(postParms, UTF8));
 
-            //Process the parameters
-            processParameters(request, postParms);
-
-            //Process custom dimensions
-            processCustomParameters(request, postParms, defaultRequest.customDimensions, request.customDimensions);
-
-            //Process custom metrics
-            processCustomParameters(request, postParms, defaultRequest.customMetrics, request.customMetrics);
-
-            // Process productParameters
-            processCustomSubParameters(request, postParms);
-
-            logger.debug("Processed all parameters and sending the request " + postParms);
-
-            HttpPost httpPost = new HttpPost(config.getUrl());
-
-            // Configure HTTP Proxy. (No uname/pass support).
-            httpPost.setConfig(configureRequest());
-
-            httpPost.setEntity(new UrlEncodedFormEntity(postParms, UTF8));
-
-            httpResponse = (CloseableHttpResponse) httpClient.execute(httpPost);
             response.setStatusCode(httpResponse.getStatusLine().getStatusCode());
             response.setPostedParms(postParms);
 
@@ -171,7 +154,7 @@ public class GoogleAnalytics {
 
         } catch (Exception e) {
             if (e instanceof UnknownHostException) {
-                logger.warn("Coudln't connect to Google Analytics. Internet may not be available. " + e.toString());
+                logger.warn("Couldn't connect to Google Analytics. Internet may not be available. " + e.toString());
             } else {
                 logger.warn("Exception while sending the Google Analytics tracker request " + request, e);
             }
@@ -184,6 +167,86 @@ public class GoogleAnalytics {
         }
 
         return response;
+    }
+
+    
+    @SuppressWarnings( { "rawtypes", "unchecked" })
+    public GoogleAnalyticsBatchResponse batch(final List<? extends GoogleAnalyticsRequest> requests) {
+        GoogleAnalyticsBatchResponse response = new GoogleAnalyticsBatchResponse();
+        if (!config.isEnabled()) {
+            return response;
+        }
+
+        CloseableHttpResponse httpResponse = null;
+        try {
+            List<List<NameValuePair>> postParms = new ArrayList<List<NameValuePair>>();
+            for (GoogleAnalyticsRequest request : requests) {
+                postParms.add(getPostParamsForRequest(request));
+            }
+
+            httpResponse = executePostRequest(config.getBatchUrl(), new MultiUrlEncodedFormEntity(postParms, UTF8));
+
+            response.setStatusCode(httpResponse.getStatusLine().getStatusCode());
+            response.setPostedParms(postParms);
+
+            EntityUtils.consumeQuietly(httpResponse.getEntity());
+
+            if (config.isGatherStats()) {
+                for (GoogleAnalyticsRequest request : requests) {
+                    gatherStats(request);
+                }
+            }
+
+        } catch (Exception e) {
+            if (e instanceof UnknownHostException) {
+                logger.warn("Couldn't connect to Google Analytics. Internet may not be available. " + e.toString());
+            } else {
+                logger.warn("Exception while sending the Google Analytics tracker request " + requests, e);
+            }
+        } finally {
+            try {
+                httpResponse.close();
+            } catch (Exception e2) {
+                //ignore
+            }
+        }
+
+        return response;
+    }
+
+    private CloseableHttpResponse executePostRequest(final String url, final HttpEntity entity)
+            throws IOException, ClientProtocolException {
+        CloseableHttpResponse httpResponse;
+        HttpPost httpPost = new HttpPost(url);
+
+        // Configure HTTP Proxy. (No uname/pass support).
+        httpPost.setConfig(configureRequest());
+
+        httpPost.setEntity(entity);
+
+        httpResponse = httpClient.execute(httpPost);
+        return httpResponse;
+    }
+
+    private List<NameValuePair> getPostParamsForRequest(final GoogleAnalyticsRequest<?> request) {
+        List<NameValuePair> postParms = new ArrayList<NameValuePair>();
+
+        logger.debug("Processing " + request);
+
+        //Process the parameters
+        processParameters(request, postParms);
+
+        //Process custom dimensions
+        processCustomParameters(request, postParms, defaultRequest.customDimensions, request.customDimensions);
+
+        //Process custom metrics
+        processCustomParameters(request, postParms, defaultRequest.customMetrics, request.customMetrics);
+
+        // Process productParameters
+        processCustomSubParameters(request, postParms);
+
+        logger.debug("Processed all parameters and sending the request " + postParms);
+        return postParms;
     }
 
     private RequestConfig configureRequest() {
@@ -200,7 +263,7 @@ public class GoogleAnalytics {
     }
 
     @SuppressWarnings( { "rawtypes", "unchecked" })
-    private void processParameters(GoogleAnalyticsRequest request, List<NameValuePair> postParms) {
+    private void processParameters(final GoogleAnalyticsRequest request, final List<NameValuePair> postParms) {
         Map<GoogleAnalyticsParameter, String> requestParms = request.getParameters();
         Map<GoogleAnalyticsParameter, String> defaultParms = defaultRequest.getParameters();
         for (GoogleAnalyticsParameter parm : defaultParms.keySet()) {
@@ -223,8 +286,8 @@ public class GoogleAnalytics {
      * @param defaultCustomElements
      * @param requestCustomElements
      */
-    private void processCustomParameters(@SuppressWarnings("rawtypes") GoogleAnalyticsRequest request, List<NameValuePair> postParms,
-            Map<String, String> defaultCustomElements, Map<String, String> requestCustomElements) {
+    private void processCustomParameters(@SuppressWarnings("rawtypes") final GoogleAnalyticsRequest request, final List<NameValuePair> postParms,
+            final Map<String, String> defaultCustomElements, final Map<String, String> requestCustomElements) {
 
         Map<String, String> customParms = new HashMap<String, String>();
         customParms.putAll(defaultCustomElements);
@@ -235,7 +298,7 @@ public class GoogleAnalytics {
         }
     }
 
-    private void processCustomSubParameters(@SuppressWarnings("rawtypes") GoogleAnalyticsRequest request, List<NameValuePair> postParms) {
+    private void processCustomSubParameters(@SuppressWarnings("rawtypes") final GoogleAnalyticsRequest request, final List<NameValuePair> postParms) {
 
         int productIndex = 0;
 
@@ -307,8 +370,8 @@ public class GoogleAnalytics {
         }
     }
 
-    private void customDimensionAndMetrics(SubParameters parameterSet, List<NameValuePair> postParms,
-            int listIndex, int productIndex) {
+    private void customDimensionAndMetrics(final SubParameters parameterSet, final List<NameValuePair> postParms,
+            final int listIndex, final int productIndex) {
 
         // custom dimensions
         for (Entry<Integer, String> customDimensionEntry : parameterSet.customDimensions().entrySet()) {
@@ -335,7 +398,7 @@ public class GoogleAnalytics {
         }
     }
 
-    private void gatherStats(@SuppressWarnings("rawtypes") GoogleAnalyticsRequest request) {
+    private void gatherStats(@SuppressWarnings("rawtypes") final GoogleAnalyticsRequest request) {
         String hitType = request.hitType();
 
         if ("pageview".equalsIgnoreCase(hitType)) {
@@ -367,6 +430,7 @@ public class GoogleAnalytics {
         }
 
         Future<GoogleAnalyticsResponse> future = getExecutor().submit(new Callable<GoogleAnalyticsResponse>() {
+            @Override
             public GoogleAnalyticsResponse call() throws Exception {
                 try {
                     @SuppressWarnings("rawtypes")
@@ -392,6 +456,7 @@ public class GoogleAnalytics {
         }
 
         Future<GoogleAnalyticsResponse> future = getExecutor().submit(new Callable<GoogleAnalyticsResponse>() {
+            @Override
             public GoogleAnalyticsResponse call() throws Exception {
                 return post(request);
             }
@@ -413,7 +478,7 @@ public class GoogleAnalytics {
         }
     }
 
-    protected CloseableHttpClient createHttpClient(GoogleAnalyticsConfig config) {
+    protected CloseableHttpClient createHttpClient(final GoogleAnalyticsConfig config) {
         PoolingHttpClientConnectionManager connManager = new PoolingHttpClientConnectionManager();
         connManager.setDefaultMaxPerRoute(getDefaultMaxPerRoute(config));
 
@@ -437,7 +502,7 @@ public class GoogleAnalytics {
         return builder.build();
     }
 
-    protected int getDefaultMaxPerRoute(GoogleAnalyticsConfig config) {
+    protected int getDefaultMaxPerRoute(final GoogleAnalyticsConfig config) {
         return Math.max(config.getMaxThreads(), 1);
     }
 
@@ -448,7 +513,7 @@ public class GoogleAnalytics {
         return executor;
     }
 
-    protected synchronized ThreadPoolExecutor createExecutor(GoogleAnalyticsConfig config) {
+    protected synchronized ThreadPoolExecutor createExecutor(final GoogleAnalyticsConfig config) {
         return new ThreadPoolExecutor(0, config.getMaxThreads(), 5, TimeUnit.MINUTES, new LinkedBlockingDeque<Runnable>(),
                 createThreadFactory());
     }
@@ -470,11 +535,12 @@ class GoogleAnalyticsThreadFactory implements ThreadFactory {
     private final AtomicInteger threadNumber = new AtomicInteger(1);
     private String threadNameFormat = null;
 
-    public GoogleAnalyticsThreadFactory(String threadNameFormat) {
+    public GoogleAnalyticsThreadFactory(final String threadNameFormat) {
         this.threadNameFormat = threadNameFormat;
     }
 
-    public Thread newThread(Runnable r) {
+    @Override
+    public Thread newThread(final Runnable r) {
         Thread thread = new Thread(Thread.currentThread().getThreadGroup(), r,
                 MessageFormat.format(threadNameFormat, threadNumber.getAndIncrement()), 0);
         thread.setDaemon(true);
