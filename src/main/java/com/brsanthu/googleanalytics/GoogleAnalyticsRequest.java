@@ -1864,11 +1864,28 @@ public class GoogleAnalyticsRequest<T> {
      * </div>
      * </div>
      */
+    public T experimentId(String value) {
+        setString(EXPERIMENT_ID, value);
+        return (T) this;
+    }
+
+    public String experimentId() {
+        return getString(EXPERIMENT_ID);
+    }
+
+    /**
+     * @deprecated Use correctly spelled {@link #experimentId(String))}.
+     */
+    @Deprecated
     public T expirementId(String value) {
         setString(EXPERIMENT_ID, value);
         return (T) this;
     }
 
+    /**
+     * @deprecated Use correctly spelled {@link #experimentId()}.
+     */
+    @Deprecated
     public String expirementId() {
         return getString(EXPERIMENT_ID);
     }
@@ -1905,11 +1922,28 @@ public class GoogleAnalyticsRequest<T> {
      * </div>
      * </div>
      */
+    public T experimentVariant(String value) {
+        setString(EXPERIMENT_VARIANT, value);
+        return (T) this;
+    }
+
+    public String experimentVariant() {
+        return getString(EXPERIMENT_VARIANT);
+    }
+
+    /**
+     * @deprecated Use correctly spelled {@link #experimentVariant(String)}.
+     */
+    @Deprecated
     public T expirementVariant(String value) {
         setString(EXPERIMENT_VARIANT, value);
         return (T) this;
     }
 
+    /**
+     * @deprecated Use correctly spelled {@link #experimentVariant()}.
+     */
+    @Deprecated
     public String expirementVariant() {
         return getString(EXPERIMENT_VARIANT);
     }
