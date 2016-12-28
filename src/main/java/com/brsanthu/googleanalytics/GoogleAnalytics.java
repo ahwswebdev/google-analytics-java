@@ -13,26 +13,7 @@
  */
 package com.brsanthu.googleanalytics;
 
-import static com.brsanthu.googleanalytics.GaUtils.isEmpty;
-import static com.brsanthu.googleanalytics.GaUtils.isNotEmpty;
-
-import java.io.IOException;
-import java.net.UnknownHostException;
-import java.nio.charset.Charset;
-import java.text.MessageFormat;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.concurrent.Callable;
-import java.util.concurrent.Future;
-import java.util.concurrent.LinkedBlockingDeque;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
-
+import com.brsanthu.googleanalytics.internal.MultiUrlEncodedFormEntity;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
 import org.apache.http.NameValuePair;
@@ -51,11 +32,28 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
-import org.junit.runner.Request;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.brsanthu.googleanalytics.internal.MultiUrlEncodedFormEntity;
+import java.io.IOException;
+import java.net.UnknownHostException;
+import java.nio.charset.Charset;
+import java.text.MessageFormat;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.concurrent.Callable;
+import java.util.concurrent.Future;
+import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import static com.brsanthu.googleanalytics.GaUtils.isEmpty;
+import static com.brsanthu.googleanalytics.GaUtils.isNotEmpty;
 
 /**
  * This is the main class of this library that accepts the requests from clients and
@@ -169,7 +167,6 @@ public class GoogleAnalytics {
         return response;
     }
 
-    
     @SuppressWarnings( { "rawtypes", "unchecked" })
     public GoogleAnalyticsBatchResponse batch(final List<? extends GoogleAnalyticsRequest> requests) {
         GoogleAnalyticsBatchResponse response = new GoogleAnalyticsBatchResponse();
@@ -286,7 +283,8 @@ public class GoogleAnalytics {
      * @param defaultCustomElements
      * @param requestCustomElements
      */
-    private void processCustomParameters(@SuppressWarnings("rawtypes") final GoogleAnalyticsRequest request, final List<NameValuePair> postParms,
+    private void processCustomParameters(@SuppressWarnings("rawtypes") final GoogleAnalyticsRequest request,
+            final List<NameValuePair> postParms,
             final Map<String, String> defaultCustomElements, final Map<String, String> requestCustomElements) {
 
         Map<String, String> customParms = new HashMap<String, String>();
@@ -298,7 +296,8 @@ public class GoogleAnalytics {
         }
     }
 
-    private void processCustomSubParameters(@SuppressWarnings("rawtypes") final GoogleAnalyticsRequest request, final List<NameValuePair> postParms) {
+    private void processCustomSubParameters(@SuppressWarnings("rawtypes") final GoogleAnalyticsRequest request,
+            final List<NameValuePair> postParms) {
 
         int productIndex = 0;
 
